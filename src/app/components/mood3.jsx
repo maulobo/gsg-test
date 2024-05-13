@@ -1,8 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/all";
+import { Cloudinary } from "@cloudinary/url-gen";
+
+import React, { useEffect, useState } from "react";
+gsap.registerPlugin(ScrollTrigger);
+
+import { fetchAssetInfo } from "./file";
 
 function imageSequence(config) {
   let playhead = { frame: 0 },
-    ctx = gsap.toArray(config.canvas),
+    ctx = gsap.utils.toArray(config.canvas)[0].getContext("2d"),
     onUpdate = config.onUpdate,
     images,
     updateImage = function () {
@@ -15,6 +22,7 @@ function imageSequence(config) {
     i || (img.onload = updateImage);
     return img;
   });
+
   return gsap.to(playhead, {
     frame: images.length - 1,
     ease: "none",
@@ -24,29 +32,41 @@ function imageSequence(config) {
 }
 
 const Mood3 = () => {
-  let frameCount = 147,
-    urls = new Array(frameCount)
-      .fill()
-      .map(
-        (o, i) =>
-          `https://www.apple.com/105/media/us/airpods-pro/2019/1299e2f5_9206_4470_b28e_08307a42f19b/anim/sequence/large/01-hero-lightpass/${(i + 1).toString().padStart(4, "0")}.jpg`
-      );
-  const img = imageSequence({
-    urls, // Array of image URLs
-    canvas: "#image-sequence", // <canvas> object to draw images to
-    scrollTrigger: {
-      start: 0, // start at the very top
-      end: "max", // entire page
-      scrub: true, // important!
-    },
-  });
+  const [imageUrl, setImageUrl] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await fetchAssetInfo();
+
+      setImageUrl(data);
+    };
+    fetchData();
+  }, []);
+  console.log(imageUrl);
+
+  useEffect(() => {
+    if (imageUrl.length > 0) {
+      console.log("llego bien rey");
+      let frameCount = 100,
+        urls = imageUrl;
+      imageSequence({
+        urls,
+        canvas: "#image-sequence",
+        scrollTrigger: {
+          start: 0,
+          end: "max",
+          scrub: true,
+          markers: true,
+        },
+      });
+    }
+  }, [imageUrl]);
 
   return (
-    <>
-      <div>
-        <canvas id="image-sequence" width="1158" height="770" />
-      </div>
-    </>
+    <div>
+      <div className="h-screen"></div>
+      <canvas id="image-sequence" width="1158" height="770"></canvas>
+    </div>
   );
 };
 

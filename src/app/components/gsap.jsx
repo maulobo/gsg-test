@@ -1,37 +1,78 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/all";
-import React, { useEffect, useRef } from "react";
+import "./style.css";
 
-const Gsap = () => {
-  gsap.registerPlugin(ScrollTrigger);
+import React, { useEffect, useState } from "react";
+gsap.registerPlugin(ScrollTrigger);
 
-  const section1Ref = useRef(null);
-  const section2Ref = useRef(null);
-  const section3Ref = useRef(null);
+function imageSequence(config) {
+  let playhead = { frame: 0 },
+    ctx = gsap.utils.toArray(config.canvas)[0].getContext("2d"),
+    onUpdate = config.onUpdate,
+    images,
+    updateImage = function () {
+      ctx.drawImage(
+        images[Math.round(playhead.frame)],
+        0,
+        0,
+        ctx.canvas.width,
+        ctx.canvas.height
+      );
+      onUpdate && onUpdate.call(this);
+    };
+  images = config.urls.map((url, i) => {
+    let img = new Image();
+    img.src = url;
+
+    i || (img.onload = updateImage);
+
+    return img;
+  });
+
+  return gsap.to(playhead, {
+    frame: images.length - 1,
+    ease: "none",
+    onUpdate: updateImage,
+    scrollTrigger: config.scrollTrigger,
+  });
+}
+
+const Mood = () => {
+  const imagesTot = require.context("../assets/prueba", true);
+  const imageUrls = imagesTot.keys().map((item) => imagesTot(item).default.src);
 
   useEffect(() => {
-    const tl = gsap.timeline();
+    if (imageUrls.length > 0) {
+      let frameCount = 100,
+        urls = imageUrls;
 
-    tl.to(section1Ref.current, {
-      x: 500,
-      ease: "bounce",
-      duration: 3,
-    }).to(
-      section2Ref.current,
-      {
-        x: 500,
-      },
-      "<2"
-    );
-  }, []);
+      imageSequence({
+        urls,
+        canvas: "#image-sequence",
+        scrollTrigger: {
+          start: 0,
+          end: "max",
+          scrub: true,
+          markers: true,
+        },
+      });
+    }
+  }, [imageUrls]);
 
   return (
     <div>
-      <section ref={section1Ref}>hola</section>
-      <section ref={section2Ref}>hola</section>
-      <section ref={section3Ref}>hola</section>
+      <div className="h-screen"></div>
+
+      <canvas
+        id="image-sequence"
+        height={800}
+        width={1000}
+        className="canvass"
+      ></canvas>
+
+      <div className="h-screen"></div>
     </div>
   );
 };
 
-export default Gsap;
+export default Mood;

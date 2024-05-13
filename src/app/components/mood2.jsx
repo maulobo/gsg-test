@@ -31,7 +31,7 @@ export default function Mood1() {
   return (
     <div>
       <div ref={ref1} style={{ height: "100vh" }}>
-        <video controls ref={videoRef} src="/video.mp4"></video>
+        <video controls={false} ref={videoRef} src="/video.mp4"></video>
         <div style={{ height: "100vh" }}></div>
       </div>
     </div>
